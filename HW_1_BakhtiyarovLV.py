@@ -104,21 +104,16 @@ class SplitTSVTables(luigi.Task):
         return luigi.LocalTarget(f"data/{self.dataset_name}/processed")
     
     def run(self):
-        os.makedirs(self.output().path + '/Columns', exist_ok=True)
-        os.makedirs(self.output().path + '/Controls', exist_ok=True)
-        os.makedirs(self.output().path + '/Heading', exist_ok=True)
-        os.makedirs(self.output().path + '/Probes', exist_ok=True)
-        
         processed_path = self.output().path
         
         for file_name in os.listdir(processed_path):
             if file_name.endswith(".txt"):
                 file_path = os.path.join(processed_path, file_name)
-                self._split_tsv_tables(file_path, processed_path)
+                self._split_tsv_tables(file_path)
     
     # Алгоритм, который был предложен в условии, 
     # запихнул в метод, чтобы можно было вызывать каждый файл в папке с форматом txt
-    def _split_tsv_tables(self, file_path, output_path):
+    def _split_tsv_tables(self, file_path):
         dfs = {}
         
         with open(file_path) as f:
@@ -149,6 +144,8 @@ class SplitTSVTables(luigi.Task):
 
         # Сохранение каждой таблицы в отдельный tsv-файл
         for key, df in dfs.items():
+            os.makedirs(self.output().path + '/' + key , exist_ok=True)
+            
             base_name = os.path.basename(file_path)
             
             # Удаляем расширение .txt и добавляем ключ и расширение .tsv
@@ -170,6 +167,7 @@ class SplitTSVTables(luigi.Task):
 
 # Класс очистки после преобразования файлов
 # Поскольку с него всё начинается, в него и нужно задавать параметр поиска на сайте и название датасета
+# + Папки, которые нужно создать в дальнейшем под распределение по ключам
 class Clean(luigi.Task):
     # Датасет
     dataset_name = luigi.Parameter(default='GSE68849')
